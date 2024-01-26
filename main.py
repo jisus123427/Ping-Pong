@@ -17,7 +17,15 @@ FPS = 30
 
 
 class Striker:
-    pass
+    def __init__(self, posx, posy, width, height, speed, color):
+        self.posx = posx
+        self.posy = posy
+        self.width = width
+        self.height = height
+        self.speed = speed
+        self.color = color
+        self.geekRect = pygame.Rect(posx, posy, width, height)
+        self.geek = pygame.draw.rect(screen, self.color, self.geekRect)
 
 
 class Ball:
