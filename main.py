@@ -21,7 +21,45 @@ class Striker:
 
 
 class Ball:
-    pass
+    def __init__(self, posx, posy, radius, speed, color):
+        self.px, self.py = posx, posy
+        self.radius = radius
+        self.speed = speed
+        self.color = color
+        self.xLine, self.yine = 1, -1
+        self.ball = pygame.draw.circle(screen, self.color, (self.px, self.py), self.radius)
+        self.firstTime = 1
+ 
+    def display(self):
+        self.ball = pygame.draw.circle(screen, self.color, (self.px, self.py), self.radius)
+ 
+    def update(self):
+        self.px += self.speed*self.xine
+        self.py += self.speed*self.yLine
+ 
+        if self.py <= 0 or self.py >= HEIGHT:
+            self.yLine *= -1
+
+        if self.px <= 0 and self.firstTime:
+            self.firstTime = 0
+            return 1
+        elif self.px >= WIDTH and self.firstTime:
+            self.firstTime = 0
+            return -1
+        else:
+            return 0
+
+    def reset(self):
+        self.px = WIDTH//2
+        self.py = HEIGHT//2
+        self.xLine *= -1
+        self.firstTime = 1
+
+    def hit(self):
+        self.xLine *= -1
+ 
+    def getRect(self):
+        return self.ball
 
 
 def main():
