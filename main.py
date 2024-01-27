@@ -14,6 +14,7 @@ pygame.display.set_caption("Pong")
 
 clock = pygame.time.Clock()
 FPS = 30
+pause = False
 
 
 class Striker:
@@ -93,9 +94,25 @@ class Ball:
     def getRect(self):
         return self.ball
 
+def switch_pause():
+    global pause
+    if pause:
+        pause = False
+    else:
+        pause = True
 
 def main():
-    pass
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:  #при нажатии P меняет значение паузы
+                    switch_pause()
+                # (остальные клавиши)
+        if not pause:
+            # .update для игроков и шара внутри if остальное вне
 
 
 if __name__ == "__main__":
