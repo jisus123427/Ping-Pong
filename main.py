@@ -10,7 +10,7 @@ GREEN = (0, 255, 0)
 
 WIDTH, HEIGHT = 900, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Pong")
+pygame.display.set_caption("Пинг-Понг")
 
 clock = pygame.time.Clock()
 FPS = 30
@@ -59,17 +59,17 @@ class Ball:
         self.radius = radius
         self.speed = speed
         self.color = color
-        self.xLine, self.yine = 1, -1
+        self.xLine, self.yLine = 1, -1
         self.ball = pygame.draw.circle(screen, self.color, (self.px, self.py), self.radius)
         self.firstTime = 1
- 
+
     def display(self):
         self.ball = pygame.draw.circle(screen, self.color, (self.px, self.py), self.radius)
- 
+
     def update(self):
-        self.px += self.speed*self.xine
-        self.py += self.speed*self.yLine
- 
+        self.px += self.speed * self.xLine
+        self.py += self.speed * self.yLine
+
         if self.py <= 0 or self.py >= HEIGHT:
             self.yLine *= -1
 
@@ -83,16 +83,17 @@ class Ball:
             return 0
 
     def reset(self):
-        self.px = WIDTH//2
-        self.py = HEIGHT//2
+        self.px = WIDTH // 2
+        self.py = HEIGHT // 2
         self.xLine *= -1
         self.firstTime = 1
 
     def hit(self):
         self.xLine *= -1
- 
+
     def getRect(self):
         return self.ball
+
 
 def switch_pause():
     global pause
@@ -101,18 +102,70 @@ def switch_pause():
     else:
         pause = True
 
+
 def main():
+    global event
     running = True
+
+    gamer1 = Striker(20, 0, 10, 100, 10, GREEN)
+    gamer2 = Striker(WIDTH - 30, 0, 10, 100, 10, GREEN)
+    ball = Ball(WIDTH // 2, HEIGHT // 2, 7, 7, WHITE)
+
+    listgamer = [gamer1, gamer2]
+
+    score1, score2 = 0, 0
+    y1, y2 = 0, 0
+
     while running:
+        screen.fill(BLACK)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_p:  #при нажатии P меняет значение паузы
+                if event.key == pygame.K_p:
                     switch_pause()
-                # (остальные клавиши)
-        if not pause:
-            # .update для игроков и шара внутри if остальное вне
+                    print(pause)
+                    continue
+                if event.key == pygame.K_UP:
+                    y2 = -1
+                if event.key == pygame.K_DOWN:
+                    y2 = 1
+                if event.key == pygame.K_w:
+                    y1 = -1
+                if event.key == pygame.K_s:
+                    y1 = 1
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    y2 = 0
+                if event.key == pygame.K_w or event.key == pygame.K_s:
+                    y1 = 0
+        if pause:
+            continue
+        for gamer in listgamer:
+            if pygame.Rect.colliderect(ball.getRect(), gamer.getRect()):
+                ball.hit()
+        gamer1.update(y1)
+        gamer2.update(y2)
+        point = ball.update()
+        if point == -1:
+            score1 += 1
+        elif point == 1:
+            score2 += 1
+        if point:
+            ball.reset()
+        gamer1.display()
+        gamer2.display()
+        ball.display()
+
+        # Очки игроков
+        gamer1.displayScore("Игрок 1 : ",
+                            score1, 100, 20, WHITE)
+        gamer2.displayScore("Игрок 2 : ",
+                            score2, WIDTH - 100, 20, WHITE)
+
+        pygame.display.update()
+        clock.tick(FPS)
 
 
 if __name__ == "__main__":
