@@ -1,13 +1,30 @@
+import random
 import pygame
+import os
+import sys
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey == -1:
+        colorkey = image.get_at((0, 0))
+    image.set_colorkey(colorkey)
+    return image
+
 
 pygame.init()
 
 font20 = pygame.font.Font('freesansbold.ttf', 20)
 
+GRAVITY = 10
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
-
+all_sprites = pygame.sprite.Group()
 WIDTH, HEIGHT = 900, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Пинг-Понг")
@@ -95,6 +112,49 @@ class Ball:
         return self.ball
 
 
+screen_rect = (0, 0, WIDTH, HEIGHT)
+
+
+class Particle(pygame.sprite.Sprite):
+    # сгенерируем частицы разного размера
+    fire = [load_image("star.png")]
+    for scale in (5, 10, 20):
+        fire.append(pygame.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, pos, dx, dy):
+        super().__init__(all_sprites)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        # у каждой частицы своя скорость — это вектор
+        self.velocity = [dx, dy]
+        # и свои координаты
+        self.rect.x, self.rect.y = pos
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = GRAVITY
+
+    def update(self):
+        # применяем гравитационный эффект:
+        # движение с ускорением под действием гравитации
+        self.velocity[1] += self.gravity
+        # перемещаем частицу
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        # убиваем, если частица ушла за экран
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
+
+
+def create_particles(position):
+    # количество создаваемых частиц
+    particle_count = 20
+    # возможные скорости
+    numbers = range(-5, 6)
+    for _ in range(particle_count):
+        Particle(position, random.choice(numbers), random.choice(numbers))
+
+
 def switch_pause():
     global pause
     if pause:
@@ -103,10 +163,40 @@ def switch_pause():
         pause = True
 
 
+def start_screen():
+    intro_text = ["Пинг-Понг", "",
+                  "Правила игры",
+                  "Игрок 1 - WS, Игрок 2 - Стрелки",
+                  "Пауза P"]
+
+    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('Black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 def main():
     global event
+    all_sprites = pygame.sprite.Group()
     running = True
-
     gamer1 = Striker(20, 0, 10, 100, 10, GREEN)
     gamer2 = Striker(WIDTH - 30, 0, 10, 100, 10, GREEN)
     ball = Ball(WIDTH // 2, HEIGHT // 2, 7, 7, WHITE)
@@ -153,7 +243,10 @@ def main():
         elif point == 1:
             score2 += 1
         if point:
+            create_particles((450, 250))
             ball.reset()
+        all_sprites.update()
+        all_sprites.draw(screen)
         gamer1.display()
         gamer2.display()
         ball.display()
@@ -163,11 +256,11 @@ def main():
                             score1, 100, 20, WHITE)
         gamer2.displayScore("Игрок 2 : ",
                             score2, WIDTH - 100, 20, WHITE)
-
-        pygame.display.update()
+        pygame.display.flip()
         clock.tick(FPS)
 
 
 if __name__ == "__main__":
+    start_screen()
     main()
     pygame.quit()
